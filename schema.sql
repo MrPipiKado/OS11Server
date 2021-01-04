@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(30),
+  password VARCHAR(30),
+  login BOOLEAN
+) engine=InnoDB;
