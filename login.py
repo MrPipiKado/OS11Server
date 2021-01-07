@@ -26,11 +26,24 @@ def check_if_user_exists(username, password):
 
 def client_thread(conn, addr):
     username_password = conn.recv(2048)
-    username, password = re.split('\s+', username_password.decode('utf-8'))
-    if check_if_user_exists(username, password):
-        conn.send(b"true")
-    else:
-        conn.send(b"false")
+    action, user, passwd = re.split('\s+', username_password.decode('utf-8'))
+    if action == 'l':
+        if check_if_user_exists(user, passwd):
+            conn.send(b"true")
+        else:
+            conn.send(b"false")
+
+    if action == 's':
+        if check_if_user_exists(user, passwd):
+            conn.send(b"exists")
+        else:
+            db = sqlite3.connect('chat.db')
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO users(username, password, login) VALUES (?, ?, ?)", (user, passwd, True))
+            db.commit()
+            print(user + " " + passwd + " added")
+            conn.send(b"added")
+
 
     remove(conn)
 
