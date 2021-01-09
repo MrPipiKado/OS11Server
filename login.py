@@ -12,7 +12,7 @@ def check_if_user_exists(username, password):
     :param password: the password of the chat user
     :return: True, if record exists, False if not
     """
-    conn = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=6603)
+    conn = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=3306)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = %s and password = %s", (username, password))
 
@@ -38,7 +38,7 @@ def client_thread(conn, addr):
         if check_if_user_exists(user, passwd):
             conn.send(b"exists")
         else:
-            db = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=6603)
+            db = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=3306)
             cursor = db.cursor()
             cursor.execute("INSERT INTO users(username, password, login) VALUES (%s, %s, %s)", (user, passwd, True))
             db.commit()
@@ -50,7 +50,7 @@ def client_thread(conn, addr):
 
 
 # set the connection to database
-conn = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=6603)
+conn = pymysql.connect(host="127.0.0.1", user="chat", password="chat", database="chat", port=3306)
 cursor = conn.cursor()
 
 # create the table with appropriate columns
