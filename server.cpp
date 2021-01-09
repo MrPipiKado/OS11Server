@@ -9,7 +9,12 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <signal.h>
-
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
 #define MAX_CLIENTS 100
 #define BUFFER_SZ 2048
 
@@ -41,6 +46,58 @@ void str_trim_lf (char* arr, int length) {
       break;
     }
   }
+}
+
+string filterText(string input) {
+    //read text fron file
+    string text;
+    ifstream infile;
+    infile.open("/home/svyatoslav/OS_Lab_11/OS11Server/data.txt");
+    stringstream buffer;
+    buffer << infile.rdbuf();
+    infile.close();
+    text = buffer.str();
+
+    // split text to words
+    vector <string> list;
+    vector <string> inputlist;
+    string delimiter = " ";
+    size_t pos;
+    std::string token;
+    while ((pos = text.find(delimiter)) != std::string::npos) {
+        token = text.substr(0, pos);
+        list.push_back(token);
+        text.erase(0, pos + delimiter.length());
+    }
+    text.resize (text.size () - 1);
+    list.push_back(text);
+    while ((pos = input.find(delimiter)) != std::string::npos) {
+        token = input.substr(0, pos);
+        inputlist.push_back(token);
+        input.erase(0, pos + delimiter.length());
+    }
+
+    inputlist.push_back(input);
+    //find needded word
+    for(auto & i : inputlist)
+    {
+        for(auto & j : list)
+        {
+            if(i == j){
+                string word = i;
+                for(size_t k = 0; k < i.size(); k++){
+                    word[k] = k ? '*' : i[0] ;
+                }
+                i = word;
+
+            }
+        }
+    }
+    string result;
+    for (size_t i = 0; i < inputlist.size(); ++i) {
+        result += (i ? " " : "") + inputlist[i];
+    }
+    return result;
 }
 
 void print_client_addr(struct sockaddr_in addr){
@@ -101,7 +158,7 @@ void send_message(char *s, int uid){
 
 /* Handle all communication with the client */
 void *handle_client(void *arg){
-	char buff_out[BUFFER_SZ];
+        char buff_out[BUFFER_SZ];
 	char name[32];
 	int leave_flag = 0;
 
@@ -129,6 +186,10 @@ void *handle_client(void *arg){
 		int receive = recv(cli->sockfd, buff_out, BUFFER_SZ, 0);
 		if (receive > 0){
 			if(strlen(buff_out) > 0){
+                            //фільтрація буферу
+                            string input (buff_out);
+                            input = filterText(input);
+                            strcpy(buff_out, input.c_str());
 				send_message(buff_out, cli->uid);
 
 				str_trim_lf(buff_out, strlen(buff_out));
@@ -163,7 +224,7 @@ int main(int argc, char **argv){
 		return EXIT_FAILURE;
 	}
 
-	char *ip = "0.0.0.0";
+        char *ip = "0.0.0.0";
 	int port = atoi(argv[1]);
 	int option = 1;
 	int listenfd = 0, connfd = 0;
